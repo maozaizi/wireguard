@@ -36,6 +36,7 @@ wireguard_install(){
     serverip=$(curl ipv4.icanhazip.com)
     port=$(rand 10000 20000)
     eth=$(ls /sys/class/net | awk '/^e/{print}')
+    mtu=$(cat /sys/class/net/[^l][^o]*/mtu)
 
 sudo cat > /etc/wireguard/wg0.conf <<-EOF
 [Interface]
@@ -45,7 +46,7 @@ PostUp   = iptables -A FORWARD -i wg0 -j ACCEPT; iptables -A FORWARD -o wg0 -j A
 PostDown = iptables -D FORWARD -i wg0 -j ACCEPT; iptables -D FORWARD -o wg0 -j ACCEPT; iptables -t nat -D POSTROUTING -o $eth -j MASQUERADE
 ListenPort = $port
 DNS = 8.8.8.8, 8.8.4.4
-MTU = 1460
+MTU = $mtu
 
 [Peer]
 PublicKey = $c2
@@ -58,7 +59,7 @@ sudo cat > /etc/wireguard/client.conf <<-EOF
 PrivateKey = $c1
 Address = 192.168.0.2/24
 DNS = 8.8.8.8, 8.8.4.4
-MTU = 1460
+MTU = $mtu
 
 [Peer]
 PublicKey = $s2
